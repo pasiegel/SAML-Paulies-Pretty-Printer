@@ -5,7 +5,7 @@
 
 A simple, cross-platform desktop utility for parsing, formatting, and analyzing SAML metadata.
 
-![Screenshot of the SAML Printer application UI](](https://i.imgur.com/C5ejv7G.png))
+![Screenshot of the SAML Printer application UI](https://i.imgur.com/C5ejv7G.png)
 
 ***
 
