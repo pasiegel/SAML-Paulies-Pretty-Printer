@@ -41,8 +41,8 @@ There are two ways to get the application up and running.
 Download the latest pre-built version for your operating system from the **[Releases Page](https://github.com//pasiegel/SAML-Paulies-Pretty-Printer/releases)**.
 
 1.  Go to the [Releases](https://github.com//pasiegel/SAML-Paulies-Pretty-Printer/releases) page.
-2.  Download the file for your OS (e.g., `.exe` for Windows, `.dmg` for macOS, `.AppImage` or `.deb` for Linux).
-3.  Install or run the application.
+2.  Download the file.
+3.  Install application.
 
 ### Option 2: For Developers (From Source)
 
