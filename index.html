@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Paulie's Pretty SAML Printer</title>
+<style>
+  /* === Theme & Layout (colors kept as requested) === */
+  :root{
+    --bg:#0a192f;
+    --nav:#112240;
+    --panel:#0f213f;
+    --muted-border:#303c55;
+    --accent:#64ffda;
+    --accent-darker:#52d1bc;
+    --text:#ccd6f6;
+    --muted:#8892b0;
+    --panel-alt:#1b2b4a;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* ================================================= */
+  /* === MODERN HEADER STYLES                      === */
+  /* ================================================= */
+
+  header {
+    display: flex;
+    justify-content: center;
+    gap: 40px; /* Gap between title and actions */
+    align-items: center;
+    height: 64px;
+    padding: 0 24px;
+    background-color: var(--nav);
+    border-bottom: 1px solid var(--muted-border);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-title h1 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+  
+  .header-icon {
+    color: var(--accent);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .action-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  .separator {
+    width: 1px;
+    height: 24px;
+    background-color: var(--muted-border);
+  }
+
+  .header-actions button {
+    background: transparent;
+    border: 1px solid var(--muted-border);
+    color: var(--muted);
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .2s ease;
+    font-size: 0.9rem;
+  }
+
+  .header-actions button:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    background-color: rgba(100, 255, 218, 0.1);
+  }
+
+  .header-actions button.primary {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+    font-weight: 700;
+  }
+
+  .header-actions button.primary:hover {
+    background-color: var(--accent-darker);
+    border-color: var(--accent-darker);
+  }
+
+  /* Responsive adjustments for the new header */
+  @media (max-width: 820px) {
+    header {
+      flex-direction: column;
+      height: auto;
+      padding: 16px;
+      gap: 16px;
+    }
+    .header-actions {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+
+  /* ================================================= */
+  /* === ORIGINAL STYLES                           === */
+  /* ================================================= */
+
+  .container {
+    max-width:1100px;
+    margin:18px auto;
+    padding:0 16px;
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+
+  main {
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  section{
+    background:var(--nav);
+    border-radius:8px;
+    border:1px solid var(--muted-border);
+    padding:14px;
+  }
+
+  .io-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+  }
+
+  @media (max-width:900px){
+    .io-row{ grid-template-columns: 1fr; }
+  }
+
+  h2 {
+    margin:0 0 8px 0;
+    color:var(--accent);
+    font-size:1rem;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  textarea{
+    width:100%;
+    min-height:200px;
+    background:var(--nav);
+    color:var(--text);
+    border:1px solid var(--muted-border);
+    border-radius:6px;
+    padding:12px;
+    font-family:"SF Mono", "Fira Code", monospace;
+    resize:vertical;
+    box-sizing:border-box;
+  }
+
+  #xmlOutput{ min-height:200px; }
+
+  .metadata-panel{
+    background:var(--panel);
+    border-radius:8px;
+    border:1px solid var(--muted-border);
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .meta-controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:flex-start;
+  }
+  .meta-controls button{
+    background:transparent;
+    border:1px solid var(--muted-border);
+    color:var(--text);
+    padding:6px 10px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .meta-controls button:hover{
+    background:rgba(100,255,218,0.06);
+  }
+
+  .accordion {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+
+  .acc-item{
+    border-radius:6px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.03);
+    background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+  }
+
+  .acc-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 12px;
+    cursor:pointer;
+    user-select:none;
+    justify-content:space-between;
+    background:transparent;
+    transition:background .12s ease;
+  }
+  .acc-header:hover{ background: rgba(255,255,255,0.02); }
+
+  .acc-left {
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+
+  .acc-title{
+    font-weight:700;
+    color:var(--text);
+  }
+  .acc-sub{
+    color:var(--muted);
+    font-weight:500;
+    font-size:0.9rem;
+  }
+
+  .acc-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .btn-copy{
+    background:var(--panel);
+    border:1px solid var(--muted-border);
+    color:var(--text);
+    padding:6px 8px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:700;
+  }
+
+  .acc-toggle {
+    width:28px;
+    height:28px;
+    display:inline-grid;
+    place-items:center;
+    border-radius:6px;
+    border:1px solid var(--muted-border);
+    color:var(--text);
+    background:transparent;
+    font-weight:700;
+  }
+
+  .acc-content{
+    padding:12px;
+    border-top:1px solid rgba(255,255,255,0.02);
+    background:var(--panel-alt);
+    font-family: "SF Mono", monospace;
+    white-space:pre-wrap;
+    max-height: 1000px;
+    transition: max-height .28s ease, padding .2s ease;
+  }
+  .acc-content.collapsed{
+    max-height:0;
+    padding-top:0;
+    padding-bottom:0;
+    overflow:hidden;
+  }
+
+  .meta-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .meta-item{
+    padding:8px;
+    border-radius:6px;
+    background:rgba(0,0,0,0.08);
+    border:1px solid rgba(255,255,255,0.02);
+    word-break:break-all;
+  }
+
+  .controls-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:flex-end;
+  }
+
+  .loader{
+    display:inline-block;
+    width:16px;
+    height:16px;
+    border:2px solid rgba(100,255,218,0.15);
+    border-left-color:var(--accent);
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+    vertical-align:middle;
+  }
+  @keyframes spin{ to { transform: rotate(360deg);} }
+
+  footer{
+    margin:20px auto 40px;
+    max-width:1100px;
+    color:var(--muted);
+    text-align:center;
+    padding:8px;
+  }
+
+</style>
+</head>
+<body>
+  <header>
+    <div class="header-title">
+      <h1>Paulie's Pretty SAML Printer</h1>
+    </div>
+    <nav class="header-actions" role="toolbar" aria-label="Main toolbar">
+      <div class="action-group">
+        <button id="loadSample" title="Load sample XML">📋 Sample</button>
+        <button id="loadFile" title="Load from file">📂 File</button>
+        <button id="loadUrl" title="Load from URL">🌐 URL</button>
+        <button id="pasteBtn" title="Paste from clipboard">📥 Paste</button>
+      </div>
+      <div class="separator"></div>
+      <div class="action-group">
+        <button id="downloadXml" title="Download formatted XML">💾 XML</button>
+        <button id="process" class="primary">⚡ Process</button>
+      </div>
+    </nav>
+  </header>
+
+  <div class="container">
+    <main>
+      <section>
+        <div class="io-row">
+          <div>
+            <h2>📥 Input XML</h2>
+            <textarea id="xmlInput" placeholder="Paste or load SAML XML here..."></textarea>
+          </div>
+          <div>
+            <h2>📤 Output XML</h2>
+            <textarea id="xmlOutput" readonly placeholder="Formatted XML will appear here..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="metadata-panel" aria-live="polite">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 10px;">
+          <div class="meta-controls">
+            <strong style="color:var(--accent);">🗂 Metadata</strong>
+            <span style="color:var(--muted); margin-left:8px; font-weight:600;">(accordion — cert(s) collapsed by default)</span>
+          </div>
+          <div class="meta-controls">
+            <button id="exportJsonBtn">📤 Export to JSON</button>
+            <div id="fetchStatus" style="margin-left:10px; color:var(--accent); display:none;">
+              <span class="loader" aria-hidden="true"></span> Loading...
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion" id="metadataAccordion" style="margin-top:8px;">
+          </div>
+      </section>
+    </main>
+
+    <footer>
+      &copy; 2025 Paul Siegel
+    </footer>
+  </div>
+
+<script>
+/* ========= Utilities ========= */
+
+function formatXml(xml) {
+  if (!xml) return '';
+  const reg = /(>)(<)(\/*)/g;
+  xml = xml.replace(reg, '$1\r\n$2$3');
+  let pad = 0;
+  let formatted = '';
+  xml.split('\r\n').forEach((node) => {
+    let indent = 0;
+    if (node.match(/.+<\/.+>$/)) {
+      indent = 0;
+    } else if (node.match(/^<\/.+/)) {
+      if (pad > 0) pad--;
+    } else if (node.match(/^<[^!?/]+/)) {
+      indent = 1;
+    }
+    formatted += '  '.repeat(pad) + node + '\r\n';
+    pad += indent;
+  });
+  return formatted.trim();
+}
+
+function getFingerprint(cert) {
+  try {
+    const cleaned = cert.replace(/\n|\r|-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----/g, '');
+    const raw = atob(cleaned);
+    const hex = Array.from(raw).map(c => ('0' + c.charCodeAt(0).toString(16)).slice(-2)).join('');
+    return hex.match(/.{2}/g).join(':').toUpperCase();
+  } catch(e){
+    return 'Invalid Certificate Data';
+  }
+}
+
+async function copyText(text){
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); document.body.removeChild(ta); return true; }
+    catch(e2){ document.body.removeChild(ta); return false; }
+  }
+}
+
+function downloadFile(filename, content, mime='application/json') {
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+function createAccordionItem({ id, title, subtitle, contentText, collapsed=false }) {
+  const item = document.createElement('div');
+  item.className = 'acc-item';
+  item.dataset.sectionId = id;
+  const header = document.createElement('div');
+  header.className = 'acc-header';
+  header.setAttribute('role','button');
+  header.setAttribute('aria-expanded', (!collapsed).toString());
+  const left = document.createElement('div');
+  left.className = 'acc-left';
+  const titleEl = document.createElement('div');
+  titleEl.innerHTML = `<div class="acc-title">${title}</div><div class="acc-sub">${subtitle || ''}</div>`;
+  left.appendChild(titleEl);
+  const actions = document.createElement('div');
+  actions.className = 'acc-actions';
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'btn-copy';
+  copyBtn.type = 'button';
+  copyBtn.textContent = 'Copy';
+  const toggleBtn = document.createElement('div');
+  toggleBtn.className = 'acc-toggle';
+  toggleBtn.innerText = collapsed ? '+' : '−';
+  actions.appendChild(copyBtn);
+  actions.appendChild(toggleBtn);
+  header.appendChild(left);
+  header.appendChild(actions);
+  const content = document.createElement('div');
+  content.className = 'acc-content';
+  if (collapsed) content.classList.add('collapsed');
+  content.textContent = contentText || '';
+  header.addEventListener('click', (e) => {
+    const isCollapsed = content.classList.toggle('collapsed');
+    header.setAttribute('aria-expanded', (!isCollapsed).toString());
+    toggleBtn.innerText = isCollapsed ? '+' : '−';
+  });
+  copyBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    await copyText(content.textContent);
+  });
+  item.appendChild(header);
+  item.appendChild(content);
+  return item;
+}
+
+/* ========= DOM references ========= */
+const xmlInput = document.getElementById('xmlInput');
+const xmlOutput = document.getElementById('xmlOutput');
+const accordion = document.getElementById('metadataAccordion');
+const exportJsonBtn = document.getElementById('exportJsonBtn');
+const fetchStatus = document.getElementById('fetchStatus');
+
+/* ========= Event wiring for basic controls ========= */
+document.getElementById('pasteBtn').addEventListener('click', async () => { try { xmlInput.value = await navigator.clipboard.readText(); } catch(e){} });
+document.getElementById('loadSample').addEventListener('click', () => {
+  const sample = `<?xml version="1.0"?>
+<EntityDescriptor entityID="https://example.com/idp" xmlns="urn:oasis:names:tc:SAML:2.0:metadata">
+  <SPSSODescriptor>
+    <NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</NameIDFormat>
+    <AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://example.com/sp/acs" index="1"/>
+    <SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://example.com/sp/slo"/>
+    <KeyDescriptor use="signing"><KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#"><X509Data><X509Certificate>MIID/TCCAuWgAwIBAgIJAJ...[CERT]...AUEA==</X509Certificate></X509Data></KeyInfo></KeyDescriptor>
+    <AttributeConsumingService><RequestedAttribute Name="givenName"/><RequestedAttribute Name="email"/></AttributeConsumingService>
+  </SPSSODescriptor>
+</EntityDescriptor>`;
+  xmlInput.value = sample;
+});
+document.getElementById('loadFile').addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.xml, application/xml, text/xml';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => xmlInput.value = ev.target.result;
+    reader.readAsText(file);
+  };
+  input.click();
+});
+document.getElementById('loadUrl').addEventListener('click', async () => {
+  const url = prompt('Enter SAML metadata URL:');
+  if (!url) return;
+  fetchStatus.style.display = 'inline-flex';
+  try {
+    const proxy = 'https://cors-anywhere.herokuapp.com/';
+    const res = await fetch(proxy + url);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    const txt = await res.text();
+    xmlInput.value = txt;
+  } catch (err) {
+    xmlInput.value = `Failed to fetch URL: ${err.message}\n\nNote: This may be due to CORS restrictions.`;
+  } finally {
+    fetchStatus.style.display = 'none';
+  }
+});
+document.getElementById('downloadXml').addEventListener('click', () => {
+  const content = xmlOutput.value || xmlInput.value || '';
+  downloadFile('formatted.xml', content, 'application/xml');
+});
+xmlInput.addEventListener('dragover', (e) => e.preventDefault());
+xmlInput.addEventListener('drop', (e) => {
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => xmlInput.value = ev.target.result;
+  reader.readAsText(f);
+});
+
+/* ========= Main processing & accordion population ========= */
+function getElementsByTag(doc, ns, tagName){
+  let nodes = [];
+  try {
+    nodes = [...doc.getElementsByTagNameNS(ns, tagName)];
+    if (nodes.length === 0) nodes = [...doc.getElementsByTagName(tagName)];
+  } catch(e){
+    nodes = [...doc.getElementsByTagName(tagName)];
+  }
+  return nodes;
+}
+
+function clearAccordion(){ accordion.innerHTML = ''; }
+
+function buildMetadataObject(parsed) {
+  return {
+    entityID: parsed.entityID || null,
+    assertionConsumerService: parsed.acs || [],
+    singleLogoutService: parsed.slo || [],
+    nameIDFormats: parsed.nameIDs || [],
+    requestedAttributes: parsed.attributes || [],
+    certificates: (parsed.certs || []).map((c, i) => ({ raw: c, fingerprint: parsed.fps[i] || null }))
+  };
+}
+
+document.getElementById('process').addEventListener('click', () => {
+  const xmlString = xmlInput.value || '';
+  clearAccordion();
+
+  const parsedDoc = new DOMParser().parseFromString(xmlString, 'text/xml');
+  const parserError = parsedDoc.getElementsByTagName('parsererror');
+  if (parserError.length > 0) {
+    xmlOutput.value = 'Error parsing XML. Please check input.';
+    accordion.appendChild(createAccordionItem({
+      id: 'parse-error', title: 'Parse Error', subtitle: 'Invalid XML',
+      contentText: new XMLSerializer().serializeToString(parserError[0]), collapsed: false
+    }));
+    return;
+  }
+
+  xmlOutput.value = formatXml(new XMLSerializer().serializeToString(parsedDoc));
+
+  const samlNS = 'urn:oasis:names:tc:SAML:2.0:metadata';
+  const sigNS = 'http://www.w3.org/2000/09/xmldsig#';
+
+  const entityID = parsedDoc.documentElement.getAttribute('entityID') || 'Not Found';
+
+  const acs = [...new Set(getElementsByTag(parsedDoc, samlNS, 'AssertionConsumerService').map(n => n.getAttribute('Location')).filter(Boolean))];
+  const slo = [...new Set(getElementsByTag(parsedDoc, samlNS, 'SingleLogoutService').map(n => n.getAttribute('Location')).filter(Boolean))];
+  const nameIDs = [...new Set(getElementsByTag(parsedDoc, samlNS, 'NameIDFormat').map(n => n.textContent.trim()).filter(Boolean))];
+  const attributes = [...new Set(getElementsByTag(parsedDoc, samlNS, 'RequestedAttribute').map(n => n.getAttribute('Name')).filter(Boolean))];
+  const certs = [...new Set(getElementsByTag(parsedDoc, sigNS, 'X509Certificate').map(n => n.textContent.trim()).filter(Boolean))];
+
+  const fps = certs.map(getFingerprint);
+
+  accordion.appendChild(createAccordionItem({ id: 'entity', title: 'Entity ID', subtitle: entityID, contentText: entityID, collapsed: false }));
+  if (acs.length){ accordion.appendChild(createAccordionItem({ id: 'acs', title: `Assertion Consumer Service (ACS) URLs`, subtitle: `${acs.length} URL(s)`, contentText: acs.join('\n'), collapsed: false })); }
+  if (slo.length){ accordion.appendChild(createAccordionItem({ id: 'slo', title: `Single Logout Service URLs`, subtitle: `${slo.length} URL(s)`, contentText: slo.join('\n'), collapsed: false })); }
+  if (nameIDs.length){ accordion.appendChild(createAccordionItem({ id: 'nameid', title: `NameID Formats`, subtitle: `${nameIDs.length} format(s)`, contentText: nameIDs.join('\n'), collapsed: false })); }
+  if (attributes.length){ accordion.appendChild(createAccordionItem({ id: 'attrs', title: `Requested Attribute Claims`, subtitle: `${attributes.length} attribute(s)`, contentText: attributes.join('\n'), collapsed: false })); }
+
+  if (certs.length) {
+    const certGroup = document.createElement('div');
+    certGroup.style.display = 'flex';
+    certGroup.style.flexDirection = 'column';
+    certGroup.style.gap = '8px';
+    for (let i=0; i<certs.length; i++){
+      const raw = certs[i];
+      const fp = fps[i] || getFingerprint(raw);
+      certGroup.appendChild(createAccordionItem({ id: `cert-${i}`, title: `X.509 Certificate ${certs.length > 1 ? `(${i+1})` : ''}`, subtitle: `Fingerprint: ${fp}`, contentText: `-----BEGIN CERTIFICATE-----\n${raw}\n-----END CERTIFICATE-----\n\nFingerprint: ${fp}`, collapsed: true }));
+    }
+    const wrapper = document.createElement('div');
+    wrapper.className = 'acc-item';
+    const wrapperHeader = document.createElement('div');
+    wrapperHeader.className = 'acc-header';
+    wrapperHeader.style.cursor = 'default';
+    wrapperHeader.innerHTML = `<div class="acc-left"><div class="acc-title">Certificates</div><div class="acc-sub">${certs.length} certificate(s)</div></div><div class="acc-actions"><button class="btn-copy" id="copyAllCerts">Copy All</button></div>`;
+    const wrapperContent = document.createElement('div');
+    wrapperContent.className = 'acc-content';
+    wrapperContent.appendChild(certGroup);
+    wrapperHeader.querySelector('#copyAllCerts').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const all = certs.map((c, idx) => `Certificate ${idx+1}:\n-----BEGIN CERTIFICATE-----\n${c}\n-----END CERTIFICATE-----\n`).join('\n');
+      await copyText(all);
+    });
+    wrapper.appendChild(wrapperHeader);
+    wrapper.appendChild(wrapperContent);
+    accordion.appendChild(wrapper);
+  }
+
+  if (accordion.children.length <= 1 && entityID === 'Not Found') {
+    accordion.appendChild(createAccordionItem({ id: 'none', title: 'Notice', subtitle: 'No SAML metadata could be extracted.', contentText: 'No recognizable metadata tags were found.', collapsed: false }));
+  }
+
+  accordion._parsed = { entityID, acs, slo, nameIDs, attributes, certs, fps };
+});
+
+/* ========= Export to JSON ========= */
+exportJsonBtn.addEventListener('click', () => {
+  const parsed = accordion._parsed || {};
+  const metaObj = buildMetadataObject(parsed);
+  const content = JSON.stringify(metaObj, null, 2);
+  downloadFile('metadata.json', content, 'application/json');
+});
+
+</script>
+</body>
+</html>
