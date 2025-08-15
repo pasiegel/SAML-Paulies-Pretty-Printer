@@ -112,6 +112,3 @@ This application is built using **[Electron](https://www.electronjs.org/)**, whi
 
 ***
 
-## 📜 License
-
-This project is licensed under the **ISC License**. See the `LICENSE` file for details.
