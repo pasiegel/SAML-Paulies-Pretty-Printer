@@ -65,6 +65,9 @@ If you want to run the latest code or contribute to the project, you can build i
     ```
 
 4.  **Build the application with Electron Packager:**
+    ```bash
+    npm run build
+    ```
 
     To package the app into a distributable format, this project uses `electron-packager`. You may need to install it globally or as a dev dependency (`npm install electron-packager --save-dev`).
 
