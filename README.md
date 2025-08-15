@@ -50,8 +50,8 @@ If you want to run the latest code or contribute to the project, you can build i
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/your-username/your-repo.git](https://github.com/your-username/your-repo.git)
-    cd your-repo
+    git clone [https://github.com/pasiegel/SAML-Paulies-Pretty-Printer.git](https://github.com/SAML-Paulies-Pretty-Printer.git)
+    cd SAML-Paulies-Pretty-Printer
     ```
 
 2.  **Install dependencies:**
@@ -75,12 +75,11 @@ If you want to run the latest code or contribute to the project, you can build i
     ```json
     "scripts": {
       "start": "electron .",
-      "package:win": "electron-packager . your-app-name --platform=win32 --arch=x64 --out=release-builds --overwrite",
-      "package:mac": "electron-packager . your-app-name --platform=darwin --arch=x64 --out=release-builds --overwrite",
-      "package:linux": "electron-packager . your-app-name --platform=linux --arch=x64 --out=release-builds --overwrite"
+      "package:win": "electron-packager . saml-tool-app --platform=win32 --arch=x64 --out=release-builds --overwrite",
+      "package:mac": "electron-packager . saml-tool-app --platform=darwin --arch=x64 --out=release-builds --overwrite",
+      "package:linux": "electron-packager . saml-tool-app --platform=linux --arch=x64 --out=release-builds --overwrite"
     }
     ```
-    *(Remember to replace `your-app-name` with the desired name for the executable).*
 
     Then, run the appropriate command from your terminal to build for a specific platform:
 
